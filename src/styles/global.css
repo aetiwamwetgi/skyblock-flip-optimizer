@@ -1,0 +1,191 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0f1117;
+  color: #e6e6e6;
+}
+
+.app-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid #2a2d3a;
+  padding-bottom: 1rem;
+}
+
+.app-header h1 {
+  font-size: 1.4rem;
+  margin: 0;
+  color: #ffd166;
+}
+
+.profile-summary {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #a9adc1;
+}
+
+.app-nav {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.app-nav button {
+  background: #1b1e2b;
+  color: #e6e6e6;
+  border: 1px solid #2a2d3a;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.app-nav button.active {
+  background: #ffd166;
+  color: #0f1117;
+  font-weight: 600;
+}
+
+.panel {
+  background: #161923;
+  border: 1px solid #2a2d3a;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.panel h2 {
+  margin-top: 0;
+  color: #ffd166;
+}
+
+.muted {
+  color: #a9adc1;
+  font-size: 0.9rem;
+}
+
+.muted.small {
+  font-size: 0.75rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid #2a2d3a;
+}
+
+th {
+  color: #ffd166;
+  font-weight: 600;
+}
+
+tr.highlight {
+  background: #23283a;
+}
+
+tr.muted-row {
+  opacity: 0.45;
+}
+
+.positive {
+  color: #7ee787;
+  font-weight: 600;
+}
+
+.negative {
+  color: #ff6b6b;
+}
+
+.error {
+  color: #ff6b6b;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.toolbar input[type="text"],
+.toolbar input[type="number"],
+.toolbar select {
+  background: #0f1117;
+  border: 1px solid #2a2d3a;
+  color: #e6e6e6;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+}
+
+.toolbar button {
+  background: #ffd166;
+  border: none;
+  color: #0f1117;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: #a9adc1;
+}
+
+.form-grid input,
+.form-grid select {
+  background: #0f1117;
+  border: 1px solid #2a2d3a;
+  color: #e6e6e6;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+.risk-explainer {
+  margin-top: 1rem;
+}
+
+.app-footer {
+  text-align: center;
+  color: #6b7080;
+  padding: 1rem 0;
+}
