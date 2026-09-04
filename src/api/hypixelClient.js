@@ -27,7 +27,26 @@ export async function fetchBazaarPrices() {
   }
 }
 
-// Alias per compatibilità²² con useBazaarData.js
+/**
+ * Fetch degli items (per compatibilità²²)
+ * @returns {Promise<Object>} Oggetto con i dati di tutti i prodotti del bazaar
+ */
+export async function fetchItems() {
+  return fetchBazaarPrices();
+}
+
+/**
+ * Estrae le ricette della forge dai dati del bazaar
+ * @param {Object} bazaarData - Dati del bazaar
+ * @returns {Array} Array di ricette della forge
+ */
+export function extractForgeRecipes(bazaarData) {
+  // Questa funzione estrae le ricette forge dai dati del bazaar
+  // Per ora ritorna un array vuoto come fallback
+  return [];
+}
+
+// Alias per compatibilità²² con useBazaarData.js e useItemsData.js
 export const fetchbazaar = fetchBazaarPrices;
 export const fetchBazaar = fetchBazaarPrices;
 
