@@ -1,81 +1,106 @@
 # SkyBlock Flip Optimizer
 
-Applicazione web per individuare e ottimizzare **Bazaar flips** e **Forge flips** su Hypixel SkyBlock, tenendo conto di capitale disponibile, tolleranza al rischio, volumi di scambio reali e strategia di acquisto/vendita (Insta vs Ask/Bid).
+Dashboard per **Bazaar flipping** e **Forge flipping** su Hypixel SkyBlock, con calcolo di capacità di volume, profili di rischio e guadagno orario forge (1-8 forge).
 
-## Perché questo progetto
+## Features
 
-I flipping tracker esistenti (tipo SkyHelper, Sky-Economy, Coflnet flipper) mostrano margine teorico per singolo item, ma spesso ignorano:
+### Bazaar Flips
+- Scansione in tempo reale dei prezzi dal bazaar
+- Calcolo automatico del profitto per flip
+- Filtri per capitale minimo/massimo
+- Ordinamento per profitto, ROI, volume
+- Strategie di acquisto/vendita (Insta Buy/Ask, Insta Sell/Ask)
 
-- se il volume del bazaar è sufficiente a smaltire l'ordine senza far crollare il prezzo;
-- come cambia il profitto in base al capitale disponibile e al numero di forge (1-8) posseduti;
-- il confronto diretto tra strategia "Insta/Insta", "Ask/Ask" o mista, per capire quale rende di più a parità di tempo di attesa.
+### Forge Flips
+- **114 ricette della forge** supportate
+- Calcolo automatico del costo dei materiali dall'API Hypixel
+- Profitto per ora e profitto per forge
+- Supporto per 1-8 forge simultanee
+- Strategie di acquisto/vendita personalizzabili
+- Ordinamento per profitto/ora, profitto totale, tempo di craft
 
-Questo progetto risolve tutti questi punti in un'unica dashboard.
-
-## Funzionalità
-
-### 1. Bazaar Flip Scanner
-- Legge in tempo reale buyPrice, sellPrice, buyVolume, sellVolume di ogni prodotto Bazaar.
-- Calcola margine per unità, margine %, e capacità reale di flip = quante unità puoi effettivamente comprare/vendere nella finestra di tempo scelta, in base al volume orario storico.
-- Applica la tassa Bazaar (1.10% flip tax, 1.25% se non hai Mercante Livello 25 max) alle vendite ask.
-- Filtra risultati per capitale massimo investibile e per profilo di rischio.
-
-### 2. Forge Flip Calculator
-- Recupera le ricette Forge (materiali richiesti + tempo di lavorazione) e il prezzo di vendita dell'oggetto risultante.
-- Calcola il costo dei materiali in base alla strategia scelta per l'acquisto (Insta buy oppure Ask buy).
-- Calcola il ricavo in base alla strategia di vendita scelta (Insta sell oppure Ask sell).
-- Permette di specificare il numero di forge disponibili (1-8): stima il guadagno orario totale = (margine per craft / tempo di forgiatura) x numero di forge.
-- Confronta automaticamente le 4 combinazioni di strategia (Insta/Insta, Insta/Ask, Ask/Insta, Ask/Ask) e segnala quale massimizza il guadagno/ora.
-
-### 3. Profilo di investimento personalizzato
-- Campo capitale disponibile (coins).
-- Selettore di rischio (conservativo / bilanciato / aggressivo) che pesa volume minimo richiesto e margine minimo accettabile.
-- Ordina i flip per rendimento orario atteso, non solo per margine assoluto.
-
-## Architettura
-
-```
-src/
-  api/       client per Hypixel API (bazaar, items, forge recipes, auctions)
-  core/      logica di calcolo pura (flip.js, forge.js, constants.js)
-  components/ componenti React riusabili
-  pages/     Dashboard, BazaarFlips, ForgeFlips, Settings
-  hooks/     hook di polling dati e stato globale (zustand)
-```
-
-## Fonti dati
-
-- Bazaar: https://api.hypixel.net/v2/skyblock/bazaar (pubblica, nessuna API key richiesta)
-- Item e ricette Forge: https://api.hypixel.net/resources/skyblock/items (pubblica)
-- Auction House: https://api.hypixel.net/v2/skyblock/auctions
-
-## Avvio locale
+## Installazione
 
 ```bash
+# Clona il repository
+git clone https://github.com/aetiwamwetgi/skyblock-flip-optimizer.git
+cd skyblock-flip-optimizer
+
+# Installa le dipendenze
 npm install
+
+# Avvia in sviluppo
 npm run dev
-```
 
-L'app parte su http://localhost:5173.
-
-## Build e pubblicazione
-
-```bash
+# Build per produzione
 npm run build
 ```
 
-Il workflow incluso in `.github/workflows/deploy.yml` pubblica automaticamente la cartella `dist/` su GitHub Pages a ogni push sul branch main.
+## Utilizzo
 
-Nelle impostazioni del repository, sezione Pages, imposta la source su "GitHub Actions". Il sito sarà disponibile su `https://<tuo-utente>.github.io/skyblock-flip-optimizer/`.
+1. Apri il sito nel browser (di solito `http://localhost:5173` in sviluppo)
+2. I prezzi vengono fetchati automaticamente dall'API di Hypixel ogni 60 secondi
+3. Usa i controlli per:
+   - Cambiare numero di forge (1-8)
+   - Selezionare strategia di acquisto/vendita
+   - Ordinare i risultati per diverse metriche
 
-## Roadmap
+## API
 
-- Storico prezzi Bazaar (grafico 24h/7g) per stimare volatilità reale.
-- Integrazione Auction House per flip di item non-Bazaar.
-- Salvataggio profili di rischio/capitale in localStorage.
-- Notifiche quando un flip supera una soglia di guadagno/ora.
-- Confronto guadagno/ora forge flip vs bazaar flip a parità di capitale.
+Il progetto usa l'API pubblica di Hypixel SkyBlock:
+- **Bazaar Prices**: `https://api.hypixel.net/skyblock/bazaar`
+- Non richiede API key
+- Rate limit: 2 richieste/secondo
 
-## Licenza
+## Struttura del Progetto
 
-MIT. Questo progetto non è affiliato a Hypixel o Mojang; usa dati pubblici esposti dall'API ufficiale di Hypixel.
+```
+skyblock-flip-optimizer/
+├── src/
+│   ├── api/
+│   │   └── hypixelClient.js    # Client per API Hypixel
+│   ├── pages/
+│   │   ├── BazaarFlips.jsx     # Pagina Bazaar Flips
+│   │   ├── ForgeFlips.jsx      # Pagina Forge Flips (114 ricette)
+│   │   ├── Dashboard.jsx       # Dashboard principale
+│   │   └── Settings.jsx        # Impostazioni
+│   ├── hooks/                  # Custom React hooks
+│   │   └── useBazaarPrices.js  # Hook per fetch prezzi
+│   ├── core/                   # Logica core
+│   ├── styles/                 # Fogli di stile
+│   ├── App.jsx                 # Componente principale
+│   └── main.jsx                # Entry point
+├── index.html
+├── package.json
+├── vite.config.js
+└── README.md
+```
+
+## Strategie di Trading
+
+### Bazaar Flipping
+- **Insta Buy / Insta Sell**: Compri e vendi immediatamente, profitto sicuro ma minore
+- **Insta Buy / Ask Sell**: Compri subito, metti in vendita a prezzo ask, profitto maggiore ma più lento
+- **Ask Buy / Insta Sell**: Metti ordine di acquisto a prezzo ask, vendi subito
+- **Ask Buy / Ask Sell**: Massimizza il profitto ma richiede più tempo
+
+### Forge Flips
+- Scegli il numero di forge disponibili (1-8)
+- Il sistema calcola automaticamente quale item craftare per massimizzare il profitto/ora
+- Considera il tempo di craft e il prezzo corrente dei materiali
+
+## License
+
+MIT License - vedi file [LICENSE](LICENSE) per dettagli.
+
+## Contributing
+
+1. Fork il repository
+2. Crea un branch per la tua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit delle modifiche (`git commit -m 'Add some AmazingFeature'`)
+4. Push sul branch (`git push origin feature/AmazingFeature`)
+5. Apri una Pull Request
+
+## Disclaimer
+
+Questo tool è solo a scopo informativo. Hypixel SkyBlock è un gioco di proprietà di Hypixel Inc. Questo progetto non è affiliato con Hypixel Inc.
