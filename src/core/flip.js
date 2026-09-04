@@ -3,16 +3,45 @@ import {
   BAZAAR_SELL_TAX_LVL25,
 } from "./constants.js";
 
+/**
+ * Dato lo stato quick_status di un prodotto Bazaar, calcola le due strategie
+ * di acquisto/vendita disponibili e il relativo margine.
+ *
+ * Semantica ufficiale Hypixel (v2/skyblock/bazaar):
+ * - quick_status.buyPrice  = prezzo per un INSTANT BUY: quanto paghi comprando
+ *   istantaneamente dalle sell offer piu basse esistenti sul mercato.
+ * - quick_status.sellPrice = prezzo per un INSTANT SELL: quanto ottieni
+ *   vendendo istantaneamente alle buy order piu alte esistenti sul mercato.
+ *
+ * Nel bazaar, buyPrice e' quasi sempre PIU ALTO di sellPrice (lo spread
+ * bid-ask e' a sfavore di chi fa insta/insta). Il margine reale del
+ * flipping si ottiene SOLO piazzando ordini (ask), non con insta/insta:
+ *
+ * - Per COMPRARE a buon prezzo: piazzi una BUY ORDER vicino a sellPrice
+ *   (il prezzo piu basso) e aspetti che qualcuno te la riempia.
+ * - Per VENDERE a buon prezzo: piazzi una SELL OFFER vicino a buyPrice
+ *   (il prezzo piu alto) e aspetti che qualcuno te la compri.
+ *
+ * @param {object} quickStatus - campo quick_status della risposta Bazaar API
+ * @param {"lvl25"|"default"} taxTier
+ */
 export function computeBazaarFlip(quickStatus, taxTier = "default") {
   const tax = taxTier === "lvl25" ? BAZAAR_SELL_TAX_LVL25 : BAZAAR_SELL_TAX_DEFAULT;
 
-  const instaBuyPrice = quickStatus.buyPrice;
-  const instaSellPrice = quickStatus.sellPrice;
+  const instaBuyPrice = quickStatus.buyPrice; // prezzo per comprare subito
+  const instaSellPrice = quickStatus.sellPrice; // prezzo per vendere subito
 
+  // Margine "insta/insta": compri al prezzo di mercato (buyPrice, il piu
+  // alto) e rivendi istantaneamente (sellPrice, il piu basso). Quasi sempre
+  // negativo, dato lo spread naturale del bazaar. Lo teniamo come riferimento
+  // per mostrare all'utente perche' NON e' una strategia valida.
   const grossMarginInstaInsta = instaSellPrice - instaBuyPrice;
 
-  const askBuyPrice = instaBuyPrice * 0.999;
-  const askSellPrice = instaSellPrice * 1.001;
+  // Strategia "ask/ask" CORRETTA: piazzi una buy order leggermente sopra
+  // sellPrice (per essere in cima alla coda dei venditori) e una sell offer
+  // leggermente sotto buyPrice (per essere in cima alla coda dei compratori).
+  const askBuyPrice = instaSellPrice * 1.001;
+  const askSellPrice = instaBuyPrice * 0.999;
   const grossMarginAskAsk = askSellPrice - askBuyPrice;
 
   const netSellInstaInsta = instaSellPrice * (1 - tax) - instaBuyPrice;
@@ -32,6 +61,12 @@ export function computeBazaarFlip(quickStatus, taxTier = "default") {
   };
 }
 
+/**
+ * Stima la capacità di flip reale in base al volume orario di buy/sell.
+ * Il volume limitante e il minimo tra quanto puoi comprare e quanto puoi
+ * vendere nella finestra di tempo, e viene ulteriormente capato dal capitale
+ * disponibile diviso per il prezzo di acquisto.
+ */
 export function estimateFlipCapacity({
   buyMovingWeek,
   sellMovingWeek,
@@ -60,6 +95,10 @@ export function estimateFlipCapacity({
   };
 }
 
+/**
+ * Combina margine e capacita per stimare il profitto/ora di un flip Bazaar,
+ * per entrambe le strategie (insta/insta e ask/ask).
+ */
 export function computeBazaarFlipOpportunity({
   productId,
   quickStatus,

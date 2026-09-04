@@ -11,9 +11,9 @@ function buildPriceMap(products) {
     const qs = data.quick_status;
     map[productId] = {
       instaBuyPrice: qs.buyPrice,
-      askBuyPrice: qs.buyPrice * 0.999,
+      askBuyPrice: qs.sellPrice * 1.001,
       instaSellPrice: qs.sellPrice,
-      askSellPrice: qs.sellPrice * 1.001,
+      askSellPrice: qs.buyPrice * 0.999,
     };
   }
   return map;
@@ -82,6 +82,7 @@ export default function ForgeFlips() {
 
   const loading = bazaarLoading || itemsLoading;
   const error = bazaarError || itemsError;
+  const noRecipesFound = !loading && !error && (!forgeRecipes || forgeRecipes.length === 0);
 
   return (
     <section className="panel">
@@ -90,6 +91,24 @@ export default function ForgeFlips() {
         Confronta il costo dei materiali (Insta buy o Ask buy) con il ricavo di vendita dell'oggetto
         forgiato (Insta sell o Ask sell), moltiplicato per {profile.forgeCount} forge disponibili.
       </p>
+
+      {noRecipesFound && (
+        <div className="panel" style={{ background: "#2a2114", borderColor: "#7a5a1e" }}>
+          <strong>Nessuna ricetta Forge trovata nei dati pubblici.</strong>
+          <p className="muted">
+            L'endpoint pubblico <code>resources/skyblock/items</code> di Hypixel non include le
+            ricette Forge (materiali richiesti e tempo di lavorazione): quel campo esiste solo nei
+            repository comunitari come{" "}
+            <a href="https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO" target="_blank" rel="noreferrer">
+              NotEnoughUpdates-REPO
+            </a>{" "}
+            (file <code>items/*.json</code>, campo <code>recipe</code> con chiavi tipo{" "}
+            <code>forge_ingredient_1</code>) o in progetti come SkyHelper/Firmament. Per abilitare
+            questa sezione serve integrare una di queste fonti come dataset statico delle ricette,
+            aggiornato periodicamente, incrociato poi con i prezzi live del Bazaar qui sotto.
+          </p>
+        </div>
+      )}
 
       <div className="toolbar">
         <label>
@@ -114,7 +133,7 @@ export default function ForgeFlips() {
       {loading && <p>Caricamento ricette e prezzi...</p>}
       {error && <p className="error">{error}</p>}
 
-      {!loading && !error && (
+      {!loading && !error && !noRecipesFound && (
         <table>
           <thead>
             <tr>
