@@ -1,6 +1,127 @@
 import { useState, useEffect, useCallback } from 'react';
 import './ForgeFlips.css';
 
+// Mappatura dei nomi delle ricette agli ID del bazaar Hypixel
+const RECIPE_TO_BAZAAR_ID = {
+  "Refined Diamond": "REFINED_DIAMOND",
+  "Refined Mithril": "REFINED_MITHRIL",
+  "Refined Titanium": "REFINED_TITANIUM",
+  "Refined Tungsten": "REFINED_TUNGSTEN",
+  "Refined Umber": "REFINED_UMBER",
+  "Fuel Canister": "FUEL_CANISTER",
+  "Bejeweled Handle": "BEJEWELED_HANDLE",
+  "Drill Motor": "DRILL_MOTOR",
+  "Golden Plate": "GOLDEN_PLATE",
+  "Mithril Plate": "MITHRIL_PLATE",
+  "Tungsten Plate": "TUNGSTEN_PLATE",
+  "Umber Plate": "UMBER_PLATE",
+  "Gemstone Mixture": "GEMSTONE_MIXTURE",
+  "Glacite Amalgamation": "GLACITE_AMALGAMATION",
+  "Perfect Jasper Gemstone": "PERFECT_JASPER_GEMSTONE",
+  "Perfect Ruby Gemstone": "PERFECT_RUBY_GEMSTONE",
+  "Perfect Jade Gemstone": "PERFECT_JADE_GEMSTONE",
+  "Perfect Sapphire Gemstone": "PERFECT_SAPPHIRE_GEMSTONE",
+  "Perfect Amber Gemstone": "PERFECT_AMBER_GEMSTONE",
+  "Perfect Topaz Gemstone": "PERFECT_TOPAZ_GEMSTONE",
+  "Perfect Amethyst Gemstone": "PERFECT_AMETHYST_GEMSTONE",
+  "Perfect Opal Gemstone": "PERFECT_OPAL_GEMSTONE",
+  "Perfect Onyx Gemstone": "PERFECT_ONYX_GEMSTONE",
+  "Perfect Citrine Gemstone": "PERFECT_CITRINE_GEMSTONE",
+  "Perfect Aquamarine Gemstone": "PERFECT_AQUAMARINE_GEMSTONE",
+  "Perfect Peridot Gemstone": "PERFECT_PERIDOT_GEMSTONE",
+  "Perfect Plate": "PERFECT_PLATE",
+  "Beacon II": "BEACON_II",
+  "Beacon III": "BEACON_III",
+  "Beacon IV": "BEACON_IV",
+  "Beacon V": "BEACON_V",
+  "Titanium Talisman": "TITANIUM_TALISMAN",
+  "Diamonite": "DIAMONITE",
+  "Pocket Iceberg": "POCKET_ICEBERG",
+  "Power Crystal": "POWER_CRYSTAL",
+  "Travel Scroll to the Dwarven Forge": "DWARVEN_FORGE_SCROLL",
+  "Bejeweled Collar": "BEJEWELED_COLLAR",
+  "Mithril Gauntlet": "MITHRIL_GAUNTLET",
+  "Mithril Belt": "MITHRIL_BELT",
+  "Mithril Cloak": "MITHRIL_CLOAK",
+  "Mithril Necklace": "MITHRIL_NECKLACE",
+  "Chisel": "CHISEL",
+  "Tungsten Key": "TUNGSTEN_KEY",
+  "Umber Key": "UMBER_KEY",
+  "Frigid Husk": "FRIGID_HUSK",
+  "Travel Scroll to the Dwarven Base Camp": "DWARVEN_BASE_CAMP_SCROLL",
+  "Mithril Drill SX-R226": "MITHRIL_DRILL_1",
+  "Mithril-Infused Fuel Tank": "MITHRIL_FUEL_TANK",
+  "Mithril-Plated Drill Engine": "MITHRIL_DRILL_ENGINE",
+  "Beacon III": "BEACON_III",
+  "Titanium Ring": "TITANIUM_RING",
+  "Pure Mithril": "PURE_MITHRIL",
+  "Titanium Tesseract": "TITANIUM_TESSERACT",
+  "Dwarven Geode": "DWARPEN_GEODE",
+  "Petrified Starfall": "PETRIFIED_STARFALL",
+  "Pesto Goblin Omelette": "PESTO_OMELETTE",
+  "Ammonite": "AMMONITE",
+  "Ruby Drill TX-15": "RUBY_DRILL",
+  "Titanium Gauntlet": "TITANIUM_GAUNTLET",
+  "Titanium Belt": "TITANIUM_BELT",
+  "Titanium Cloak": "TITANIUM_CLOAK",
+  "Titanium Necklace": "TITANIUM_NECKLACE",
+  "Mole": "MOLE",
+  "Mithril Drill SX-R326": "MITHRIL_DRILL_2",
+  "Titanium-Plated Drill Engine": "TITANIUM_DRILL_ENGINE",
+  "Goblin Omelette": "GOBLIN_OMELETTE",
+  "Beacon IV": "BEACON_IV",
+  "Titanium Artifact": "TITANIUM_ARTIFACT",
+  "Scorched Topaz": "SCORCHED_TOPAZ",
+  "Sunny Side Goblin Omelette": "SUNNY_SIDE_OMELETTE",
+  "Gemstone Drill LT-522": "GEMSTONE_DRILL",
+  "Gleaming Crystal": "GLEAMING_CRYSTAL",
+  "Titanium Drill DR-X355": "TITANIUM_DRILL_1",
+  "Titanium Drill DR-X455": "TITANIUM_DRILL_2",
+  "Titanium Drill DR-X555": "TITANIUM_DRILL_3",
+  "Titanium-Infused Fuel Tank": "TITANIUM_FUEL_TANK",
+  "Beacon V": "BEACON_V",
+  "Titanium Relic": "TITANIUM_RELIC",
+  "Spicy Goblin Omelette": "SPICY_OMELETTE",
+  "Gemstone Chamber": "GEMSTONE_CHAMBER",
+  "Topaz Drill KGR-12": "TOPAZ_DRILL",
+  "Ruby-Polished Drill Engine": "RUBY_DRILL_ENGINE",
+  "Gemstone Fuel Tank": "GEMSTONE_FUEL_TANK",
+  "Amethyst Gauntlet": "AMETHYST_GAUNTLET",
+  "Jade Belt": "JADE_BELT",
+  "Sapphire Cloak": "SAPPHIRE_CLOAK",
+  "Amber Necklace": "AMBER_NECKLACE",
+  "Blue Cheese Goblin Omelette": "BLUE_CHEESE_OMELETTE",
+  "Titanium Drill DR-X655": "TITANIUM_DRILL_4",
+  "Jasper Drill X": "JASPER_DRILL",
+  "Sapphire-Polished Drill Engine": "SAPPHIRE_DRILL_ENGINE",
+  "Amber Material": "AMBER_MATERIAL",
+  "Helmet Of Divan": "DIVAN_HELMET",
+  "Chestplate Of Divan": "DIVAN_CHESTPLATE",
+  "Leggings Of Divan": "DIVAN_LEGGINGS",
+  "Boots Of Divan": "DIVAN_BOOTS",
+  "Amber-Polished Drill Engine": "AMBER_DRILL_ENGINE",
+  "Perfectly-Cut Fuel Tank": "PERFECT_FUEL_TANK",
+  "Divan's Drill": "DIVAN_DRILL",
+  "Divan's Powder Coating": "DIVAN_POWDER_COATING",
+  "Secret Railroad Pass": "RAILROAD_PASS",
+  "T-Rex": "T_REX",
+  "Spinosaurus": "SPINOSAURUS",
+  "Goblin": "GOBLIN",
+  "Ankylosaurus": "ANKYLOSAURUS",
+  "Penguin": "PENGUIN",
+  "Mammoth": "MAMMOTH",
+  "Dwarven Handwarmers": "HANDWARMERS",
+  "Reinforced Chisel": "REINFORCED_CHISEL",
+  "Dwarven Metal Talisman": "DWARPEN_METAL_TALISMAN",
+  "Portable Campfire": "PORTABLE_CAMPFIRE",
+  "Tungsten Regulator": "TUNGSTEN_REGULATOR",
+  "Glacite-Plated Chisel": "GLACITE_PLATED_CHISEL",
+  "Perfect Chisel": "PERFECT_CHISEL",
+  "Pendant of Divan": "DIVAN_LEGGINGS",
+  "Relic of Power": "RELIC_OF_POWER",
+  "Skeleton Key": "SKELETON_KEY",
+};
+
 // Dati completi delle ricette della forge (114 items)
 const FORGE_RECIPES = [
   { name: "Refined Diamond", timeHours: 8, materials: { ENCHANTED_DIAMOND_BLOCK: 2 } },
@@ -135,6 +256,7 @@ function ForgeFlips({ bazaarPrices }) {
   const [forgeFlips, setForgeFlips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState(null);
 
   // Calcola il costo dei materiali per una ricetta
   const calculateMaterialCost = useCallback((materials, prices, selectedStrategy) => {
@@ -149,6 +271,7 @@ function ForgeFlips({ bazaarPrices }) {
 
       const priceData = prices[materialId];
       if (!priceData) {
+        console.warn(`Materiale ${materialId} non trovato nel bazaar`);
         continue;
       }
 
@@ -163,10 +286,12 @@ function ForgeFlips({ bazaarPrices }) {
   const calculateProfit = useCallback((recipe, prices, selectedStrategy) => {
     const strategyData = STRATEGIES[selectedStrategy];
     const materialCost = calculateMaterialCost(recipe.materials, prices, selectedStrategy);
-    const productId = recipe.name.toUpperCase().replace(/ /g, '_').replace(/-/g, '_').replace(/'/g, '');
-    const priceData = prices[productId];
     
-    if (!priceData) {
+    // Usa la mappatura per ottenere l'ID corretto del bazaar
+    const bazaarId = RECIPE_TO_BAZAAR_ID[recipe.name];
+    const priceData = bazaarId ? prices[bazaarId] : null;
+    
+    if (!priceData || !priceData.quick_status) {
       return null;
     }
 
@@ -184,6 +309,7 @@ function ForgeFlips({ bazaarPrices }) {
       profitPerHour,
       profitPerForge,
       materials: recipe.materials,
+      bazaarId,
     };
   }, [calculateMaterialCost]);
 
@@ -196,9 +322,22 @@ function ForgeFlips({ bazaarPrices }) {
 
     try {
       const flips = [];
+      const debugData = [];
 
       for (const recipe of FORGE_RECIPES) {
         const profitData = calculateProfit(recipe, bazaarPrices, strategy);
+        
+        // Aggiungi dati debug per i primi 5 items
+        if (debugData.length < 5) {
+          const bazaarId = RECIPE_TO_BAZAAR_ID[recipe.name];
+          const hasPrice = bazaarId && bazaarPrices[bazaarId];
+          debugData.push({
+            name: recipe.name,
+            bazaarId,
+            hasPrice: !!hasPrice,
+            profit: profitData?.profit,
+          });
+        }
         
         if (profitData && profitData.profit > 0) {
           flips.push(profitData);
@@ -211,6 +350,7 @@ function ForgeFlips({ bazaarPrices }) {
       });
 
       setForgeFlips(flips);
+      setDebugInfo(debugData);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -292,6 +432,18 @@ function ForgeFlips({ bazaarPrices }) {
           </button>
         </div>
       </div>
+
+      {debugInfo && (
+        <div className="debug-info" style={{ background: '#222', padding: '10px', marginBottom: '20px', borderRadius: '4px' }}>
+          <h4 style={{ color: '#f0a500', margin: '0 0 10px 0' }}>Debug Info (primi 5 items):</h4>
+          <pre style={{ color: '#aaa', fontSize: '12px', margin: 0, whiteSpace: 'pre-wrap' }}>
+            {JSON.stringify(debugInfo, null, 2)}
+          </pre>
+          <p style={{ color: '#888', fontSize: '12px', margin: '10px 0 0 0' }}>
+            Totale bazaar items caricati: {Object.keys(bazaarPrices).length}
+          </p>
+        </div>
+      )}
 
       <div className="forge-flips-table">
         <table>
