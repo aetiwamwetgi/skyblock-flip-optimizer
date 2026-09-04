@@ -29,6 +29,7 @@ export async function fetchBazaarPrices() {
 
 // Alias per compatibilità²² con useBazaarData.js
 export const fetchbazaar = fetchBazaarPrices;
+export const fetchBazaar = fetchBazaarPrices;
 
 /**
  * Ottiene il prezzo di un singolo prodotto
