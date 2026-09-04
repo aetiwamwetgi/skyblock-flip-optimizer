@@ -38,7 +38,6 @@ const RECIPE_TO_BAZAAR_ID = {
   "Diamonite": "DIAMONITE",
   "Pocket Iceberg": "POCKET_ICEBERG",
   "Power Crystal": "POWER_CRYSTAL",
-  "Travel Scroll to the Dwarven Forge": "DWARVEN_FORGE_SCROLL",
   "Bejeweled Collar": "BEJEWELED_COLLAR",
   "Mithril Gauntlet": "MITHRIL_GAUNTLET",
   "Mithril Belt": "MITHRIL_BELT",
@@ -48,11 +47,9 @@ const RECIPE_TO_BAZAAR_ID = {
   "Tungsten Key": "TUNGSTEN_KEY",
   "Umber Key": "UMBER_KEY",
   "Frigid Husk": "FRIGID_HUSK",
-  "Travel Scroll to the Dwarven Base Camp": "DWARVEN_BASE_CAMP_SCROLL",
   "Mithril Drill SX-R226": "MITHRIL_DRILL_1",
   "Mithril-Infused Fuel Tank": "MITHRIL_FUEL_TANK",
   "Mithril-Plated Drill Engine": "MITHRIL_DRILL_ENGINE",
-  "Beacon III": "BEACON_III",
   "Titanium Ring": "TITANIUM_RING",
   "Pure Mithril": "PURE_MITHRIL",
   "Titanium Tesseract": "TITANIUM_TESSERACT",
@@ -117,7 +114,6 @@ const RECIPE_TO_BAZAAR_ID = {
   "Tungsten Regulator": "TUNGSTEN_REGULATOR",
   "Glacite-Plated Chisel": "GLACITE_PLATED_CHISEL",
   "Perfect Chisel": "PERFECT_CHISEL",
-  "Pendant of Divan": "DIVAN_LEGGINGS",
   "Relic of Power": "RELIC_OF_POWER",
   "Skeleton Key": "SKELETON_KEY",
 };
@@ -271,11 +267,10 @@ function ForgeFlips({ bazaarPrices }) {
 
       const priceData = prices[materialId];
       if (!priceData) {
-        console.warn(`Materiale ${materialId} non trovato nel bazaar`);
         continue;
       }
 
-      const buyPrice = priceData.quick_status.buyPrice * strategyData.buyMultiplier;
+      const buyPrice = priceData.quick_status?.buyPrice || 0;
       totalCost += buyPrice * quantity;
     }
 
@@ -316,33 +311,61 @@ function ForgeFlips({ bazaarPrices }) {
   // Calcola tutti i forge flips
   useEffect(() => {
     if (!bazaarPrices || Object.keys(bazaarPrices).length === 0) {
+      console.log('[ForgeFlips] Nessun prezzo bazaar disponibile');
       setLoading(false);
       return;
     }
 
+    console.log('[ForgeFlips] Prezzi bazaar caricati:', Object.keys(bazaarPrices).length, 'items');
+    console.log('[ForgeFlips] Esempio keys:', Object.keys(bazaarPrices).slice(0, 10));
+
     try {
       const flips = [];
       const debugData = [];
+      let totalRecipes = 0;
+      let recipesWithPrice = 0;
+      let profitableRecipes = 0;
 
       for (const recipe of FORGE_RECIPES) {
+        totalRecipes++;
+        const bazaarId = RECIPE_TO_BAZAAR_ID[recipe.name];
+        const hasPrice = bazaarId && bazaarPrices[bazaarId];
+        
+        if (hasPrice) {
+          recipesWithPrice++;
+        }
+        
         const profitData = calculateProfit(recipe, bazaarPrices, strategy);
         
-        // Aggiungi dati debug per i primi 5 items
-        if (debugData.length < 5) {
-          const bazaarId = RECIPE_TO_BAZAAR_ID[recipe.name];
-          const hasPrice = bazaarId && bazaarPrices[bazaarId];
+        if (profitData) {
           debugData.push({
             name: recipe.name,
             bazaarId,
-            hasPrice: !!hasPrice,
-            profit: profitData?.profit,
+            hasPrice: true,
+            materialCost: Math.round(profitData.materialCost),
+            sellPrice: Math.round(profitData.sellPrice),
+            profit: Math.round(profitData.profit),
+            profitPerHour: Math.round(profitData.profitPerHour),
+          });
+          
+          if (profitData.profit > 0) {
+            profitableRecipes++;
+            flips.push(profitData);
+          }
+        } else if (debugData.length < 20 && !hasPrice) {
+          debugData.push({
+            name: recipe.name,
+            bazaarId,
+            hasPrice: false,
+            error: 'Nessun prezzo trovato',
           });
         }
-        
-        if (profitData && profitData.profit > 0) {
-          flips.push(profitData);
-        }
       }
+
+      console.log('[ForgeFlips] Totale ricette:', totalRecipes);
+      console.log('[ForgeFlips] Ricette con prezzo:', recipesWithPrice);
+      console.log('[ForgeFlips] Ricette profittevoli:', profitableRecipes);
+      console.log('[ForgeFlips] Flips trovati:', flips.length);
 
       flips.sort((a, b) => {
         const multiplier = sortOrder === 'desc' ? 1 : -1;
@@ -350,9 +373,16 @@ function ForgeFlips({ bazaarPrices }) {
       });
 
       setForgeFlips(flips);
-      setDebugInfo(debugData);
+      setDebugInfo({
+        debugData,
+        totalRecipes,
+        recipesWithPrice,
+        profitableRecipes,
+        totalBazaarItems: Object.keys(bazaarPrices).length,
+      });
       setError(null);
     } catch (err) {
+      console.error('[ForgeFlips] Errore:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -434,14 +464,32 @@ function ForgeFlips({ bazaarPrices }) {
       </div>
 
       {debugInfo && (
-        <div className="debug-info" style={{ background: '#222', padding: '10px', marginBottom: '20px', borderRadius: '4px' }}>
-          <h4 style={{ color: '#f0a500', margin: '0 0 10px 0' }}>Debug Info (primi 5 items):</h4>
-          <pre style={{ color: '#aaa', fontSize: '12px', margin: 0, whiteSpace: 'pre-wrap' }}>
-            {JSON.stringify(debugInfo, null, 2)}
-          </pre>
-          <p style={{ color: '#888', fontSize: '12px', margin: '10px 0 0 0' }}>
-            Totale bazaar items caricati: {Object.keys(bazaarPrices).length}
-          </p>
+        <div className="debug-info" style={{ background: '#222', padding: '15px', marginBottom: '20px', borderRadius: '8px', border: '1px solid #444' }}>
+          <h4 style={{ color: '#f0a500', margin: '0 0 15px 0', fontSize: '16px' }}>📊 Debug Info</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '15px' }}>
+            <div style={{ background: '#333', padding: '10px', borderRadius: '4px' }}>
+              <div style={{ color: '#888', fontSize: '12px' }}>Totale Bazaar Items</div>
+              <div style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold' }}>{debugInfo.totalBazaarItems}</div>
+            </div>
+            <div style={{ background: '#333', padding: '10px', borderRadius: '4px' }}>
+              <div style={{ color: '#888', fontSize: '12px' }}>Ricette Totali</div>
+              <div style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold' }}>{debugInfo.totalRecipes}</div>
+            </div>
+            <div style={{ background: '#333', padding: '10px', borderRadius: '4px' }}>
+              <div style={{ color: '#888', fontSize: '12px' }}>Ricette con Prezzo</div>
+              <div style={{ color: '#4caf50', fontSize: '20px', fontWeight: 'bold' }}>{debugInfo.recipesWithPrice}</div>
+            </div>
+            <div style={{ background: '#333', padding: '10px', borderRadius: '4px' }}>
+              <div style={{ color: '#888', fontSize: '12px' }}>Ricette Profittevoli</div>
+              <div style={{ color: '#f0a500', fontSize: '20px', fontWeight: 'bold' }}>{debugInfo.profitableRecipes}</div>
+            </div>
+          </div>
+          <h5 style={{ color: '#aaa', margin: '15px 0 10px 0', fontSize: '14px' }}>Dettagli primi items (max 20):</h5>
+          <div style={{ maxHeight: '400px', overflowY: 'auto', background: '#111', padding: '10px', borderRadius: '4px', fontSize: '11px' }}>
+            <pre style={{ color: '#ccc', margin: 0, whiteSpace: 'pre-wrap' }}>
+              {JSON.stringify(debugInfo.debugData, null, 2)}
+            </pre>
+          </div>
         </div>
       )}
 
